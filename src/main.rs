@@ -152,22 +152,6 @@ fn api_url(server: &str, path: &str) -> String {
     )
 }
 
-fn fetch_active_missions(client: &Client, server: &str) -> Result<ActiveMissions, Box<dyn Error>> {
-    let response = client.get(api_url(server, "/missions/active")).send()?;
-    Ok(response.error_for_status()?.json()?)
-}
-
-fn fetch_mission_detail(
-    client: &Client,
-    server: &str,
-    mission_id: &str,
-) -> Result<Value, Box<dyn Error>> {
-    let response = client
-        .get(api_url(server, &format!("/missions/{mission_id}")))
-        .send()?;
-    Ok(response.error_for_status()?.json()?)
-}
-
 fn submit_solution(
     client: &Client,
     server: &str,
@@ -186,16 +170,49 @@ fn submit_solution(
             "http": "reqwest",
             "aip": "AIP-1",
             "operations": [
-                "GET /missions/active",
-                "GET /missions/{id}",
-                "POST /missions/{id}/submit"
+                "GET /api/missions",
+                "GET /api/missions/{id}",
+                "POST /api/missions/{id}/submit"
             ]
         }),
     };
 
-    let response = client
-        .post(api_url(server, &format!("/missions/{mission_id}/submit")))
+    let api_response = client
+        .post(api_url(
+            server,
+            &format!("/api/missions/{mission_id}/submit"),
+        ))
         .json(&payload)
+        .send()?;
+
+    let response = if api_response.status().is_success() {
+        api_response
+    } else {
+        eprintln!(
+            "POST /api/missions/{mission_id}/submit returned {}; retrying /missions/{mission_id}/submit",
+            api_response.status()
+        );
+        client
+            .post(api_url(server, &format!("/missions/{mission_id}/submit")))
+            .json(&payload)
+            .send()?
+    };
+
+    Ok(response.error_for_status()?.json()?)
+}
+
+fn fetch_active_missions(client: &Client, server: &str) -> Result<ActiveMissions, Box<dyn Error>> {
+    let response = client.get(api_url(server, "/api/missions")).send()?;
+    Ok(response.error_for_status()?.json()?)
+}
+
+fn fetch_mission_detail(
+    client: &Client,
+    server: &str,
+    mission_id: &str,
+) -> Result<Value, Box<dyn Error>> {
+    let response = client
+        .get(api_url(server, &format!("/api/missions/{mission_id}")))
         .send()?;
     Ok(response.error_for_status()?.json()?)
 }
@@ -226,8 +243,8 @@ mod tests {
     #[test]
     fn api_url_trims_duplicate_slashes() {
         assert_eq!(
-            api_url("https://example.com/", "/missions/active"),
-            "https://example.com/missions/active"
+            api_url("https://example.com/", "/api/missions"),
+            "https://example.com/api/missions"
         );
     }
 

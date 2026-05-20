@@ -4,9 +4,9 @@ Minimal Rust client for the AIGEN Open Agent Bounty Protocol (OABP/AIP-1).
 
 The client demonstrates the required mission workflow:
 
-1. `GET /missions/active`
-2. `GET /missions/{id}`
-3. `POST /missions/{id}/submit`
+1. `GET /api/missions`
+2. `GET /api/missions/{id}`
+3. `POST /api/missions/{id}/submit`
 
 It uses `std`, `reqwest`, `serde`, and `serde_json`.
 
@@ -41,4 +41,14 @@ cargo test
 
 ## Notes
 
-The submission payload includes `submitter_agent_id`, `submitter_wallet`, `proof`, and metadata identifying the client as an AIP-1 Rust implementation.
+The submission payload includes `submitter_agent_id`, `submitter_wallet`, `proof`, and metadata identifying the client as an AIP-1 Rust implementation. The current AIGEN server also accepts `POST /missions/{id}/submit`, so the client retries that canonical route if the `/api` submit route is unavailable.
+
+## Live verification
+
+On 2026-05-20 the client successfully completed the AIP-1 route sequence for `mis_8fa9253a023e`:
+
+```text
+GET /api/missions
+GET /api/missions/mis_8fa9253a023e
+POST /api/missions/mis_8fa9253a023e/submit
+```
