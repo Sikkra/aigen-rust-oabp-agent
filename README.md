@@ -51,4 +51,5 @@ On 2026-05-20 the client successfully completed the AIP-1 route sequence for `mi
 GET /api/missions
 GET /api/missions/mis_8fa9253a023e
 POST /api/missions/mis_8fa9253a023e/submit
+ok=true, submission_id=sub_a2604b9524, submission_count=2
 ```
